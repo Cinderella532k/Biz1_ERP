@@ -49,8 +49,7 @@ export class OrderModule {
   Items: Array<OrderItemModule>
   Subtotal: number
   TaxAmount: number
-  Description: String
-
+   Description: string
   constructor(ordertype, Id) {
     this.Items = []
     this.Id = Id
@@ -98,6 +97,7 @@ export class OrderModule {
     this.ProdStatus = ''
     this.Description = ''
   }
+  
   addproduct(product, OrdId, storeId) {
     this.Items.push(new OrderItemModule(product, OrdId, storeId))
     this.setbillamount()
@@ -112,6 +112,7 @@ export class OrderModule {
     this.Tax2 = 0
     this.Tax3 = 0
     this.Items.forEach(item => {
+      console.log(item);
       item.Amount = item.Price * item.OrderQuantity
       if (item.IsInclusive) {
         item.Amount = item.Amount - (item.Amount * (item.Tax1 + item.Tax2 + item.Tax3)) / 100
@@ -139,7 +140,7 @@ export class OrderItemModule {
   Updated: boolean = false
   DiscPercent: number
   DiscAmount: number
-  Status: number
+  Status: number 
   StatusId: number
   Note: string
   Message: string
@@ -237,7 +238,7 @@ export class OrderItemDetailModule {
     this.OrderItemDetailId = 0
     this.Id = 0
     this.ActualProdId = 0
-    this.BatchId = 0
+    this.BatchId = product.batchId
     this.OrdProdType = 0
     this.StorageStoreId = 0
     this.Quantity = 0

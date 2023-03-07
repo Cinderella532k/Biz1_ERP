@@ -10,8 +10,6 @@ import { Router, ActivatedRoute } from '@angular/router'
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators'
 import { OrderItemModule, OrderModule } from './edit-internal.module'
 import { Location } from '@angular/common'
-import { idText } from 'typescript'
-import { THIS_EXPR } from '@angular/compiler/src/output/output_ast'
 @Component({
   selector: 'app-edit-internal-order',
   templateUrl: './edit-internal-order.component.html',
@@ -46,6 +44,7 @@ export class EditInternalOrderComponent implements OnInit {
   // @ViewChild('instance2', { static: true }) instance2: NgbTypeahead
   @ViewChild('productautocomplete', { static: false }) public productinput: TemplateRef<any>
   @ViewChild('scrollframe', { static: false }) scrollFrame: ElementRef
+  @ViewChild('enterproduct', { static: false }) public enterproduct: TemplateRef<any>
 
   model: any = 'QWERTY'
   order: OrderModule
@@ -209,6 +208,11 @@ export class EditInternalOrderComponent implements OnInit {
   numRecordsStr = 50
   dispatchStatus = 1
 
+  storedata: any = {
+    receiver: null,
+    supplier: null
+  }
+
   tableData = [
     {
       key: '1',
@@ -280,17 +284,27 @@ export class EditInternalOrderComponent implements OnInit {
     console.log('item', item)
     this.ProductId = item.productId
   }
+  // selectedsupplieritem(item) {
+  //   console.log('item', item)
+  //   this.SuppliedById = item.id
+  // }
+
   selectedsupplieritem(item) {
     console.log('item', item)
     this.SuppliedById = item.id
+    console.log(this.SuppliedById)
+    this.getallprod()
   }
+
   searchsupplier = (text$: Observable<string>) =>
     text$.pipe(
       debounceTime(200),
       map(term =>
         term === ''
           ? []
-          : this.stores.cusList
+          // : this.stores.cusList
+          : this.sname
+            // this.stores.StoreList 
             .filter(v => v.name.toLowerCase().indexOf(term.toLowerCase()) > -1)
             .slice(0, 10),
       ),
@@ -302,6 +316,7 @@ export class EditInternalOrderComponent implements OnInit {
     console.log('item', item)
     this.OrderedById = item.id
   }
+
   searchreceiver = (text$: Observable<string>) =>
     text$.pipe(
       debounceTime(200),
@@ -316,9 +331,9 @@ export class EditInternalOrderComponent implements OnInit {
 
   formatterreceiver = (x: { name: string }) => x.name
 
-  updataprod: any
 
-  prodts: any = {
+  updataprod: any
+  prod: any = {
     name: '',
     orderQuantity: '',
     price: '',
@@ -331,34 +346,27 @@ export class EditInternalOrderComponent implements OnInit {
     if (this.OrdId != 0) {
       this.Auth.getorderPrd(this.CompanyId, this.OrdId).subscribe(data => {
         this.ordPrdDetails = data
-        console.log(this.ordPrdDetails);
-
-        // this.updataprod = this.ordPrdDetails['orderItem']
-        // console.log(this.updataprod);
-
+        console.log('hhrtughggg', this.ordPrdDetails)
         this.updataprod = this.ordPrdDetails['orderProd']
         console.log(this.updataprod);
 
-        this.prodts.name = this.updataprod[0].name
-        console.log(this.prodts.name);
+        this.prod.name = this.updataprod[0].name
+        console.log(this.prod.name);
 
-        this.prodts.orderQuantity = this.updataprod[0].orderQuantity
-        console.log(this.prodts.orderQuantity);
+        this.prod.orderQuantity = this.updataprod[0].orderQuantity
+        console.log(this.prod.orderQuantity);
 
-        this.prodts.price = this.updataprod[0].price
-        console.log(this.prodts.price);
+        this.prod.price = this.updataprod[0].price
+        console.log(this.prod.price);
 
-        this.prodts.tax1 = this.updataprod[0].tax1
-        console.log(this.prodts.tax1);
+        this.prod.tax1 = this.updataprod[0].tax1
+        console.log(this.prod.tax1);
 
-        this.prodts.tax2 = this.updataprod[0].tax2
-        console.log(this.prodts.tax2);
+        this.prod.tax2 = this.updataprod[0].tax2
+        console.log(this.prod.tax2);
 
-        this.prodts.name = this.updataprod[0].name
-        console.log(this.prodts.name);
-
-
-        console.log('hhrtughggg', this.ordPrdDetails)
+        this.prod.name = this.updataprod[0].name
+        console.log(this.prod.name);
         this.ordPrdDetails.orderItem.forEach(element => {
           element.Action = 'Chk'
           element['Price'] = element.price
@@ -401,7 +409,7 @@ export class EditInternalOrderComponent implements OnInit {
         // })
 
 
-        // this.ordPrdDetails.orderProd.forEach(element => {
+        //this.ordPrdDetails.orderProd.forEach(element => {
         //   element.name +=
         //     (this.ordPrdDetails.variants
         //       .filter(x => x.barcodeId == element.barcodeId)
@@ -417,6 +425,7 @@ export class EditInternalOrderComponent implements OnInit {
       })
     }
   }
+
   getord() {
     {
       this.Ordprd.push({
@@ -443,8 +452,31 @@ export class EditInternalOrderComponent implements OnInit {
       this.Stocks = data
     })
   }
-  loginfo
+  batchprd: any = []
+  product: any
+  getallprod() {
+    console.log(this.CompanyId, this.SuppliedById, this.booltest)
+    this.Auth.getintprod(this.CompanyId, this.SuppliedById, this.booltest).subscribe(data => {
+      this.gprod = data
+      console.log(this.gprod)
+      this.batchprd = this.gprod['batchprod']
+      console.log(this.batchprd)
+      this.product = this.gprod['product']
+      console.log(this.product)
 
+      this.gprod.batchprod.forEach(prod => {
+        // console.log(prod);
+        prod.maxqty = prod.quantity
+        prod.OrderQuantity = null
+      })
+      this.enterproduct['nativeElement'].focus()
+      //this.enterprod['nativeElement'].focus()
+      this.groupProducts()
+    })
+  }
+
+
+  loginfo
   ngOnInit(): void {
     // Master
     // 14-06-2022
@@ -459,6 +491,9 @@ export class EditInternalOrderComponent implements OnInit {
     this.getStoreList()
     this.getord()
     this.getorderPrd()
+    this.getstorename()
+    this.getstore()
+    this.getallprod()
 
     // this.Auth.getdbdata(['loginfo']).subscribe(data => {
     //   this.loginfo = data['loginfo'][0]
@@ -473,13 +508,21 @@ export class EditInternalOrderComponent implements OnInit {
     //   this.getord();
     //   this.getorderPrd();
     // })
-
     this.products.forEach(product => {
       product.quantity = null
       product.tax = 0
       product.amount = 0
     })
   }
+
+  sname: any
+  getstore() {
+    this.Auth.getstoreslist(this.CompanyId, this.StoreId).subscribe(data => {
+      this.sname = data
+      console.log(this.sname);
+    })
+  }
+
   // getOrderList() {
   //   this.Ordprd.push({
   //     companyId: this.CompanyId,
@@ -539,6 +582,7 @@ export class EditInternalOrderComponent implements OnInit {
     this.order.Items.splice(index, 1)
     this.order.setbillamount()
   }
+
   settotalprice(i, qty) {
     this.cartitems[i].amount = this.cartitems[i].Price * this.cartitems[i].DispatchQty
     this.cartitems[i].tax =
@@ -573,18 +617,22 @@ export class EditInternalOrderComponent implements OnInit {
     this.discount = +this.discount.toFixed(2)
     // console.log(this.tax)
   }
+
   date = new Date()
   onChange(e) {
     console.log('date', e)
     this.orderDate = moment().format('YYYY-MM-DD HH:MM A')
   }
+
   showModal(): void {
     this.isVisible = true
   }
+
   dropdownnew(Value) {
     console.log('Value', Value)
     this.WipStatus = Value
   }
+
   validation() {
     var isvalid = true
     if (!this.temporaryItem.productId) isvalid = false
@@ -615,11 +663,13 @@ export class EditInternalOrderComponent implements OnInit {
     this.createby = item.createdBy
     this.addItem()
   }
+
   selecteddispatchitem(item) {
     console.log('item', item)
     this.DispatchById = item.id
     // this.order.push({OrdNo:item.id})
   }
+
   addItem() {
     console.log('temporaryItem', this.temporaryItem)
     this.temporaryItem.ContainerCount = this.ContainWgt
@@ -669,7 +719,7 @@ export class EditInternalOrderComponent implements OnInit {
       this.model = ''
       this.filteredvalues = []
       this.submitted = false
-      // console.log(this.order)
+      console.log(this.order)
       return
     }
   }
@@ -680,6 +730,7 @@ export class EditInternalOrderComponent implements OnInit {
       console.log(this.stores)
     })
   }
+
   receiveStk(id) {
     console.log(id)
     this.Auth.editInternalord(id).subscribe(data => {
@@ -687,6 +738,7 @@ export class EditInternalOrderComponent implements OnInit {
       // this.getOrderList();
     })
   }
+
   addQty(qty, item) {
     console.log('addQty', qty, item)
     this.ordPrdDetails.dispatchList.forEach(element => {
@@ -698,6 +750,7 @@ export class EditInternalOrderComponent implements OnInit {
     })
     this.getord()
   }
+
   addPrice(price, item) {
     console.log('addprice', price, item)
     this.ordPrdDetails.dispatchList.forEach(element => {
@@ -709,6 +762,7 @@ export class EditInternalOrderComponent implements OnInit {
     })
     this.getord()
   }
+
   addTax1(Tax, item) {
     console.log('addprice', Tax, item)
     this.ordPrdDetails.dispatchList.forEach(element => {
@@ -720,6 +774,7 @@ export class EditInternalOrderComponent implements OnInit {
     })
     this.getord()
   }
+
   addTax2(Tax, item) {
     console.log('addprice', Tax, item)
     this.ordPrdDetails.dispatchList.forEach(element => {
@@ -731,6 +786,7 @@ export class EditInternalOrderComponent implements OnInit {
     })
     this.getord()
   }
+
   addTax3(Tax, item) {
     console.log('Tax', Tax, item)
     this.ordPrdDetails.dispatchList.forEach(element => {
@@ -742,6 +798,7 @@ export class EditInternalOrderComponent implements OnInit {
     })
     this.getord()
   }
+
   addBatch(price, item) {
     console.log('addprice', price, item)
     this.ordPrdDetails.dispatchList.forEach(element => {
@@ -770,8 +827,6 @@ export class EditInternalOrderComponent implements OnInit {
   Updates() {
     this.order.Items.forEach(item => {
       item.CompanyId = this.CompanyId
-      console.log(item);
-
     })
 
     this.Auth.Update(this.order).subscribe(data => {
@@ -782,11 +837,12 @@ export class EditInternalOrderComponent implements OnInit {
     this.isEditting = false
   }
 
+
   Update() {
     console.log(this.order);
-    this.order.Id = this.prodts.OrdId
-    this.order.OrderNo = this.prodts.ordNo
-    this.order.StoreId = this.prodts.StoreId
+    this.order.Id = this.prod.OrdId
+    this.order.OrderNo = this.prod.ordNo
+    this.order.StoreId = this.prod.StoreId
     this.order.BillDate = moment().format('YYYY-MM-DD HH:MM A')
     this.order.CreatedDate = moment().format('YYYY-MM-DD HH:MM A')
     this.order.BillDateTime = moment().format('YYYY-MM-DD HH:MM A')
@@ -794,38 +850,34 @@ export class EditInternalOrderComponent implements OnInit {
     this.order.OrderedDateTime = moment().format('YYYY-MM-DD HH:MM A')
     this.order.DeliveryDateTime = moment().format('YYYY-MM-DD HH:MM A')
     this.order.ModifiedDate = moment().format('YYYY-MM-DD HH:MM A')
-    this.order.CompanyId = this.prodts.CompanyId
-    this.order.InvoiceNo = this.prodts.InvoiceNo
-    this.order.RefundAmount = this.prodts.refamt
-    this.order.ProdStatus = '1'
-    this.order.WipStatus = '1'
-    this.order.OrderStatusId = this.prodts.OrderStatusId
-    this.order.OrderedById = this.prodts.StoreId
-    this.order.SuppliedById = this.prodts.SuppliedById
-    this.order.OrderType = this.prodts.OrderType
-    this.order.SpecialOrder = this.prodts.SpecialOrder
-    this.order.DiscAmount = this.prodts.DiscAmount
-    this.order.DiscPercent = this.prodts.DiscPercent
-    this.order.PreviousStatusId = this.prodts.PreviousStatusId
-    this.order.Description = this.prodts.name
+    this.order.CompanyId = this.prod.CompanyId
+    this.order.Description = this.prod.name
 
-    this.order.Items.forEach(item1 => {
-      item1.CompanyId = this.CompanyId
-      console.log(item1);
-
+    this.order.Items.forEach(item => {
+      item.CompanyId = this.CompanyId
+      console.log(item);
     })
+ 
+    // this.array.push({
+    //   companyId:this.CompanyId,
+    //   id:this.OrdId,
+    //   ProductName:this.prod.name,
+    //   Quantity:this.prod.orderQuantity,
+    //   Price:this.prod.price,
+    //   Tax1:this.prod.tax1,
+    //   Tax2:this.prod.tax2,
+    //  })
+    // console.log(this.array);
 
-    // this.ordDetails.order.forEach(item => {
-    //   item.CompanyId = this.CompanyId
-    //   console.log(item);
-    // })
+    // this.order.OrderStatusDetails = n
+    // this.order.Items = this.array
+    // console.log(this.order.Items);
 
-     this.Auth.Update(this.order).subscribe(data => {
+    this.Auth.Update(this.order).subscribe(data => {
       console.log('up', data);
       this.addItem()
-     })
-    this.isEditting = false
-
+      this.getorderPrd()
+    })
   }
 
   // getorderedList: any = []
@@ -870,20 +922,92 @@ export class EditInternalOrderComponent implements OnInit {
       )
   }
 
-  prod: any = {
-    name: ''
+  // getid = ''
+  // saveedit(orderId: string) {
+  //   this.getid = orderId
+  //   console.log(this.getid)
+  // }
+
+
+  quantitychange(orderitems: OrderItemModule, event) {
+    // console.log(orderitems, event);
+    this.updataprod.OrderQuantity = orderitems
+    console.log(this.updataprod.OrderQuantity);
+
+    // this.updataprod.push(Object.assign({}, this.product))
+    // console.log(this.updataprod, this.product);
+
+    // this.updataprod.push(this.updataprod)
+    // console.log(this.updataprod);
+
+
+    // this.updataprod.push({
+    //   Id: this.prod.id,
+    //   Name: this.prod.name,
+    //   product: this.prod.productId,
+    //   quantity: this.prod.OrderQuantity,
+    //   price: this.prod.price,
+    //   tax1: this.prod.tax1,
+    //   tax2: this.prod.tax2
+
+    // })
+
+    //console.log(this.updataprod);
+    //  var prds = this.products.filter(x => x.productId == orderitems.ProductId)
+    //  console.log(orderitems.OrderQuantity);
+    // //  const prod_key = prds.ProductId
+
   }
 
-  selectproduct() {
-    console.log('tedstr', this.prod.name);
+  //Queen
+  // getpayment(value){
+  //   console.log('newpaytype', value)
+  //   this.product.OrderQuantity = value
+  // }
 
-    console.log('product retype', this.products.name)
+  getstorename() {
+    this.Auth.getdispatchstore(this.OrdId).subscribe(data => {
+      this.storedata = data[0]
+      console.log(this.storedata)
+    })
   }
 
-  quantitychange(orderitems: OrderItemModule) {
-    console.log(orderitems);
-    //  var dis = this.ordPrdDetails.dispatchList.filter(x => x.BarcodeId == orderitems.BarcodeId)[0]
-    //  console.log(orderitems.OrderQuantity );   
+  isDisabled: Boolean = false
+  test: any
+  booltest: boolean = false
+  gprod: any = []
+
+  changefilters(bool) {
+    this.booltest = bool
+    this.gprod.batchprod = true
+    console.log('Checkbox', this.booltest)
+    this.getallprod()
+    this.isDisabled = !this.isDisabled
+    this.temporaryItem = { Quantity: '', price: '', tax1: '', tax2: '' }
+    this.model = { model: '' }
   }
+
+  groupedProducts = []
+  groupProducts() {
+    var helper = {}
+    this.groupedProducts = this.gprod.batchprod || this.gprod.product.reduce((r, o) => {
+      var key = o.barcodeId + '-' + o.name
+      if (!helper[key]) {
+        helper[key] = Object.assign({}, o)
+        r.push(helper[key])
+      }
+      return r
+    }, [])
+    // this.groupedProducts = this.gprod.product.reduce((r, o) => {
+    //   var key = o.name + '_'
+    //   if (!helper[key]) {
+    //     helper[key] = Object.assign({}, o)
+    //     r.push(helper[key])
+    //   }
+    //   return r
+    // }, [])
+  }
+
+
 
 }

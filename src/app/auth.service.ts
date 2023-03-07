@@ -273,11 +273,19 @@ export class AuthService {
   // getorder(ordId) {
   //   return this.http.post(this.base_url1 + 'Internal/getOrderList', ordId)
   // }
+
   getorderPrd(compid, ordId) {
     return this.http.get(
       this.base_url + 'Internal/GetOrderedItems?CompanyId=' + compid + '&orderId=' + ordId,
     )
   }
+
+  getorderPrds(CompanyId, OrdId) {
+    return this.http.get(
+      this.base_url + 'Internal/GetOrderedItems?CompanyId=' + CompanyId + '&orderId=' + OrdId,
+    )
+  }
+
   savestock(order) {
     return this.http.post(this.base_url + 'Internal/saveIntOrd', order)
   }
@@ -302,7 +310,7 @@ export class AuthService {
     return this.http.get(
       this.base_url + 'Internal/Delete?CompanyId=' + CompanyId + '&ItemId=' + Id,
     )
-  }
+  } 
   deletedata(Id) {
     return this.http.post(this.base_url1 + 'Internal/Delete', Id)
   }
@@ -786,6 +794,10 @@ export class AuthService {
   getOrderIdinternal(OrdId) {
     return this.http.get(this.base_url + 'Internal/internalordbyid?orderid=' + OrdId)
   }
+  
+
+
+
   GetDispatch(companyId, storeId) {
     return this.http.get(
       this.base_url +
@@ -862,4 +874,10 @@ export class AuthService {
     return this.http.get(this.base_url + 'PurchaseTrx/getbillData?companyid=' + CompanyId + '&vendorid=' + vendorid + '&storeid=' + storeid)
   }
 
+  saverepay(crejson){
+    return this.http.post(this.base_url + 'CreditTrx/repay', crejson)
+  }
+
+
+  
 } 

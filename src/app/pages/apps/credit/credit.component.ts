@@ -387,11 +387,13 @@ export class CreditComponent implements OnInit {
       this.isShown = !this.isShown
       this.isTable = !this.isTable
       this.getcreditData('ALL')
-    })
+    }) 
   }
 
   contactType(val) {
     this.contacttype = val
+    console.log(this.contacttype);
+    
   }
   Delete(Id) {
     this.paycred.push({

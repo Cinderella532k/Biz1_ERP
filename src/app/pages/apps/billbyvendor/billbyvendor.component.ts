@@ -6,11 +6,12 @@ import { NgbModal, ModalDismissReasons, NgbTypeahead } from '@ng-bootstrap/ng-bo
 import { AuthService } from 'src/app/auth.service';
 import { NzNotificationService } from 'ng-zorro-antd'
 import { merge, Observable, Subject } from 'rxjs';
-import { Router , ActivatedRoute} from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
 import { Location } from '@angular/common';
 import { Transmodule } from './billbyvendor.module';
 import { BillModule } from './billbyvendor.module';
+import { SyncService } from 'src/app/services/sync/sync.service';
 
 @Component({
   selector: 'app-billbyvendor',
@@ -19,52 +20,58 @@ import { BillModule } from './billbyvendor.module';
 })
 export class BillbyvendorComponent implements OnInit {
 
+  model: any = 'QWERTY'
+  model1: any = 'SuppliedById'
+
   transmod: Transmodule
   billList: Array<BillModule> = null
-  vendors:any =[];
-  stores:any =[];
-  paymentTypes:any =[];
+  vendors: any = [];
+  stores: any = [];
+  paymentTypes: any = [];
   users = [];
   isShown = true;
-  isTable =false;
-  vendorId : any;
-  venid= null
+  isTable = false;
+  issec = true
+  isTab = true;
+  vendorId: any;
+  venid = null
   SuppliedById = null;
-  CompanyId =1;
-  paycred =[];
-  numRecords =50;
-  type ='';
-  items:any =[];
+  CompanyId = 1;
+  paycred = [];
+  numRecords = 50;
+  type = '';
+  items: any = [];
   bankAccountId = null;
-  accTypeId =null;
+  accTypeId = null;
   isActive = true;
   label = false;
   term: string = '';
 
-  Ordprd =[];
-  bankName ="";
-accountData:any =[];
-  vendor: any = 
-  {  name:'',
-    amount: null, 
-    creditTypeStatus:"", 
-    PaymentTypeId:1, 
-    accountNo:null,
-    Description: "", 
-    CompanyId: 1,
-    balance:null,
-    billDate:'',
-    billId:null,
-    pay:null,
-    // storeId:this.SuppliedById, 
-    contactType:0,
-    contactId:null,
-    TransDateTime:moment().format('YYYY-MM-DD HH:MM A'),
-    TransDate:moment().format('YYYY-MM-DD HH:MM\ A'),
-    CreatedDate:moment().format('YYYY-MM-DD HH:MM A')
-  }
+  Ordprd = [];
+  bankName = "";
+  accountData: any = [];
+  vendor: any =
+    {
+      name: '',
+      amount: null,
+      creditTypeStatus: "",
+      PaymentTypeId: 1,
+      accountNo: null,
+      Description: "",
+      CompanyId: 1,
+      balance: null,
+      billDate: '',
+      billId: null,
+      pay: null,
+      // storeId:this.SuppliedById, 
+      contactType: 0,
+      contactId: null,
+      TransDateTime: moment().format('YYYY-MM-DD HH:MM A'),
+      TransDate: moment().format('YYYY-MM-DD HH:MM\ A'),
+      CreatedDate: moment().format('YYYY-MM-DD HH:MM A')
+    }
 
-  test: any ={
+  test: any = {
     paymenttypeid: 0,
     payment: '',
     reference: '',
@@ -73,28 +80,29 @@ accountData:any =[];
 
   vendorlist: any
   pytstoreid: any
-  billdata: any 
+  billdata: any
   demo: any
 
 
 
   constructor(
-  private modalService: NgbModal,
-  private Auth: AuthService,
-  private notification: NzNotificationService,
-  private router: Router ,
-  private route: ActivatedRoute,
-  public location: Location )
-     { 
-      this.users = JSON.parse(localStorage.getItem("users"));
+    private modalService: NgbModal,
+    private Auth: AuthService,
+    private notification: NzNotificationService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private sync: SyncService,
+    public location: Location) {
+    this.users = JSON.parse(localStorage.getItem("users"));
 
-    }
-    StoreId: any
-    totalbls = null
+  }
+  StoreId: any
+  totalbls = null
   ngOnInit(): void {
     const user = JSON.parse(localStorage.getItem('user'))
     const store = JSON.parse(localStorage.getItem('store'))
     this.transmod = new Transmodule()
+    this.sync.sync()
     this.CompanyId = user.companyId
     this.StoreId = user.storeid
     // this.getvendorList();
@@ -111,20 +119,38 @@ accountData:any =[];
   date = new Date()
   onChangetime(e) {
     console.log(e, moment(e), this.date)
-  } 
-  getvendor(){
+  }
+
+  getvendor() {
     this.Auth.getvendorserach(this.CompanyId).subscribe(data => {
       this.vendorlist = data['vendor']
       console.log(this.vendorlist)
-    }) 
+      this.groupvendor()
+    })
+
   }
-  //
+
+  groupedvendor = []
+  groupvendor() {
+    var helper = {}
+    this.groupedvendor = this.vendorlist.reduce((r, o) => {
+      // console.log(this.groupedvendor)
+      var key = o.name + '-'
+      if (!helper[key]) {
+        helper[key] = Object.assign({}, o)
+        r.push(helper[key])
+      }
+      return r
+    }, [])
+    console.log('grouped', this.groupedvendor)
+  }
+
 
   getStoreList() {
     this.Auth.getstores(this.CompanyId).subscribe(data => {
       this.stores = data;
-      console.log("stores",this.stores)
-      })
+      console.log("stores", this.stores)
+    })
   }
 
   // getvendorList() {
@@ -149,116 +175,122 @@ accountData:any =[];
       console.log("paymentTypes", this.paymentTypes)
     })
   }
-  getBankAccts()
-{
-  this.Ordprd.push({
-    companyId:this.CompanyId,
-    numRecords:this.numRecords,
-    bankAccountId:this.bankAccountId,
-    accTypeId:this.accTypeId,
-    isActive:this.isActive,
-    bankName:this.bankName
-  })
-  this.Auth.getbankaccount(this.Ordprd).subscribe(data => {
-    this.accountData = data;
-    console.log("accountData",this.accountData)
-  })
-}
- 
-  updquery()
-  {
-    this.vendors.value.bills.forEach(element => {
-      element["pay"] = this.vendor.amount;                                                                                                                                                     
-    }) 
-    console.log("paymentTypes", this.items) 
-  }
-  paymttype()
-  {
-  if(this.vendor.PaymentTypeId =="2")
-  {
-    this.label = true;
-  }
-  }
-  
-  Submit()
-  {
-    this.paycred.push({
-      companyId:this.CompanyId,
-trans:this.vendor,
-creditArr:this.items,
-type :this.type,
-UserId:this.users[0].id
+
+  getBankAccts() {
+    this.Ordprd.push({
+      companyId: this.CompanyId,
+      numRecords: this.numRecords,
+      bankAccountId: this.bankAccountId,
+      accTypeId: this.accTypeId,
+      isActive: this.isActive,
+      bankName: this.bankName
     })
-    console.log("data",this.paycred)
+    this.Auth.getbankaccount(this.Ordprd).subscribe(data => {
+      this.accountData = data;
+      console.log("accountData", this.accountData)
+    })
+  }
+
+  updquery() {
+    this.vendors.value.bills.forEach(element => {
+      element["pay"] = this.vendor.amount;
+    })
+    console.log("paymentTypes", this.items)
+  }
+
+  paymttype() {
+    if (this.vendor.PaymentTypeId == "2") {
+      this.label = true;
+    }
+  }
+
+  Submit() {
+    this.paycred.push({
+      companyId: this.CompanyId,
+      trans: this.vendor,
+      creditArr: this.items,
+      type: this.type,
+      UserId: this.users[0].id
+    })
+    console.log("data", this.paycred)
     this.Auth.billpay(this.paycred).subscribe(data => {
       console.log(data)
-      this.isShown =  !this.isShown;
-      this.isTable =  !this.isTable;
+      this.isShown = !this.isShown;
+      this.isTable = !this.isTable;
     })
   }
+
   selectedvendoritem(item) {
+    // this.isShown = this.isShown
+    this.isTable = !this.isTable
+
     console.log("item", item);
     this.venid = item.id
     this.vendorId = this.venid;
-    this.isShown = this.isShown
-    this.isTable = !this.isTable
+
+    //  this.issec = !this.issec
     console.log(this.vendorId)
+    this.model = ''
     this.getbill()
     this.gettotbls()
-  } 
+  }
+
+
   // searchvendor = (text$: Observable<string>) =>
   //   text$.pipe(
   //      debounceTime(200),
   //     map(term => term === '' ? []
   //       : this.vendors.filter(v => v.name.toLowerCase().indexOf(term.toLowerCase()) > -1).slice(0, 10))
   //   )
-  searchvendor = (text$: Observable<string>) =>
-  text$.pipe(
-    debounceTime(200),
-    map(term =>
-      term === ''
-        ? []
-        : this.vendorlist
-          .filter(s => s.name.toLowerCase().indexOf(term.toLowerCase()) > -1)
-          .slice(0, 10),
-    ),
-  )
 
-  formattervendor = (x: { name: string }) => x.name; 
+  searchvendor = (text$: Observable<string>) =>
+    text$.pipe(
+      debounceTime(200),
+      map(term =>
+        term === ''
+          ? []
+          : this.groupedvendor
+            .filter(s => s.name.toLowerCase().indexOf(term.toLowerCase()) > -1)
+            .slice(0, 10),
+      ),
+    )
+
+  formattervendor = (x: { name: string }) => x.name;
 
   selectedsupplieritem(item) {
-    console.log("item",item);
-    this.SuppliedById =item.id;
+    console.log("item", item);
+    this.SuppliedById = item.id;
     // this.getbilldetails(item.id,this.vendorId)
     this.pytstoreid = this.SuppliedById
+    this.model1 = ''
     this.getbill()
     this.gettotbls()
-  } 
+    this.sync.sync()
+  }
 
 
-  getbilldetails(Id,vendorId)
-  {
+  getbilldetails(Id, vendorId) {
     this.isTable = !this.isTable;
     this.isShown = !this.isShown;
-    console.log("item",Id,vendorId);
-    this.Auth.getbillnpays(Id,vendorId).subscribe(data => {
+    console.log("item", Id, vendorId);
+    this.Auth.getbillnpays(Id, vendorId).subscribe(data => {
       this.vendors = data;
-      console.log("vendors",this.vendors)
+      console.log("vendors", this.vendors)
       this.vendor.Description = this.vendors.value.billList[0].contact.name;
       // this.vendor.amount = this.vendors.value.billList[0].amount;
       this.vendor.balance = this.vendors.value.balance;
       this.vendor.billDate = this.vendors.value.billList[0].billDate;
-       this.vendor.name = this.vendors.value.paymentStore;
-       this.vendor.storeId = this.vendors.value.bills[0].storeId
-       this.items = this.vendors.value.bills;
-       this.vendor.contactId = this.vendors.value.contactId;
-       this.vendor.billId = this.vendors.value.bills[0].billId;
-       this.vendors.value.bills.forEach(element => {
-         element["pay"] = this.vendor.amount; 
-         element["BillId"] = this.vendor.billId;                                                                                                                                                          
-       })  
-      console.log("vendors",this.vendors)
+      this.vendor.name = this.vendors.value.paymentStore;
+      this.vendor.storeId = this.vendors.value.bills[0].storeId
+      this.items = this.vendors.value.bills;
+      this.vendor.contactId = this.vendors.value.contactId;
+      this.vendor.billId = this.vendors.value.bills[0].billId;
+      this.vendors.value.bills.forEach(element => {
+        element["pay"] = this.vendor.amount;
+        element["BillId"] = this.vendor.billId;
       })
+      console.log("vendors", this.vendors)
+    })
   }
   searchsupplier = (text$: Observable<string>) =>
     text$.pipe(
@@ -270,23 +302,25 @@ UserId:this.users[0].id
   formattersupplier = (x: { name: string }) => x.name;
 
   //queen
-mastertest : any
-  getpaymenttypeid(){
+  mastertest: any
+  getpaymenttypeid() {
 
     console.log('PaymentType', this.test.payment)
     this.mastertest = this.test.payment
     console.log(this.mastertest)
   }
+
   paidamt: any
-  getbill(){
+  getbill() {
     // console.log("BillData", CompanyId, venid, pytstoreid)
     this.Auth.getbilldatabyid(this.CompanyId, this.venid, this.pytstoreid).subscribe(data => {
       this.billdata = data['bill']
       // this.paidamt = this.billdata[0].paidAmount
       // console.log(this.paidamt)
       console.log(this.billdata)
-    }) 
+    })
   }
+  
   validationrepay() {
     var isvalid = true
     // if (this.recontactId == 0) isvalid = false
@@ -300,11 +334,12 @@ mastertest : any
   gettotbls() {
     // console.log("BlsData", CompanyId, venid, pytstoreid)
     // this.Auth.saverepay(this.cred).subscribe(data =>{
-    this.Auth.getbilldatabyid(this.CompanyId,this.venid, this.pytstoreid).subscribe(data => {
+    this.Auth.getbilldatabyid(this.CompanyId, this.venid, this.pytstoreid).subscribe(data => {
       this.totabls = data['bls']
       this.totalbls = this.totabls[0].totbls
-      console.log(this.totalbls)
+      //console.log(this.totalbls)
     })
+
     // this.sumofrepay()
   }
   submitted: boolean = false
@@ -315,65 +350,82 @@ mastertest : any
   saverepaydata() {
     this.submitted = true
     if (this.validationrepay()) {
-    this.transmod.CompanyId = this.CompanyId
-    this.transmod.ContactId = this.vendorId,
-    this.transmod.PaymentTypeId = this.test.paymenttypeid,
-    this.transmod.Amount = this.test.payment,
-    this.transmod.Description = this.test.reference,
-    this.transmod.StoreId = this.StoreId
-    this.transmod.CreditTypeId = this.test.creditid
-    this.transmod.TransDate = this.test.transdate
-    this.testpayment = this.billdata[0].paidAmount
-    console.log(this.testpayment)
-    this.totalpaidamount = this.paidamt + this.mastertest
-    console.log(this.totalpaidamount)
-    var bill = new BillModule(this.transmod.ContactId, this.totalpaidamount)
-    bill.BillId = this.billdata[0].billId,
-    bill.BillDate = this.billdata[0].billDate,
-    bill.BillAmount = this.billdata[0].billAmount,
-    console.log(this.totalpaidamount)
+      this.transmod.CompanyId = this.CompanyId
+      this.transmod.ContactId = this.vendorId,
+        this.transmod.PaymentTypeId = this.test.paymenttypeid,
+        this.transmod.Amount = this.test.payment,
+        this.transmod.Description = this.test.reference,
+        this.transmod.StoreId = this.StoreId
+      this.transmod.CreditTypeId = this.test.creditid
+      this.transmod.TransDate = this.test.transdate
+      this.testpayment = this.billdata[0].paidAmount
+      console.log(this.testpayment)
+      this.totalpaidamount = this.paidamt + this.mastertest
+      console.log(this.totalpaidamount)
+      var bill = new BillModule(this.transmod.ContactId, this.totalpaidamount)
+      bill.BillId = this.billdata[0].billId,
+        bill.BillDate = this.billdata[0].billDate,
+        bill.BillAmount = this.billdata[0].billAmount,
+        console.log(this.totalpaidamount)
       // bill.PaidAmount = this.repay[0].paidAmount + this.test.payment,
-    // console.log("Already Payed", this.alreadypaidamt)
-    // console.log("New Pay", this.test.payment)
-    // console.log("TotAL pAID", this.bill.PaidAmount)
-    // console.log(this.bill.PaidAmount)
-    // console.log(this.test.payment)
-    bill.ReceiverId = this.transmod.ContactId,
-      bill.CreatedDate = moment().format('YYYY-MM-DD HH:MM A')
-    if (bill.BillAmount == bill.PaidAmount) {
-      bill.IsPaid = true
+      // console.log("Already Payed", this.alreadypaidamt)
+      // console.log("New Pay", this.test.payment)
+      // console.log("TotAL pAID", this.bill.PaidAmount)
+      // console.log(this.bill.PaidAmount)
+      // console.log(this.test.payment)
+      bill.ReceiverId = this.transmod.ContactId,
+        bill.CreatedDate = moment().format('YYYY-MM-DD HH:MM A')
+      if (bill.BillAmount == bill.PaidAmount) {
+        bill.IsPaid = true
+      }
+      else {
+        bill.IsPaid = false
+      }
+      if (bill.BillAmount == bill.PaidAmount) {
+        bill.BillStatusId = 3
+      }
+      else {
+        bill.BillStatusId = 2
+      }
+      this.bill = bill
+      this.transmod.Bill = this.bill
+      console.log(this.transmod)
+      // this.Auth.saverepay(this.transmod).subscribe(data => {
+      //   this.savedata = data
+      //   this.sync.sync()
+      //   console.log(this.savedata)
+      // })
+      console.log('vendid', this.vendorId)
+      this.test.payment = null
+      this.test.reference = null
+      // this.venid.reset()
+      this.SuppliedById = null
+      this.test.paymenttypeid = null
+      this.isTable = !this.isTable
+      // window.location.reload();
+      this.model = ''
+      this.model1 = ''
+      this.sync.sync()
+      this.locback()
+    } else {
+      this.notification.error('Error', 'Check All Data')
     }
-    else {
-      bill.IsPaid = false
-    }
-    if (bill.BillAmount == bill.PaidAmount) {
-      bill.BillStatusId = 3
-    }
-    else {
-      bill.BillStatusId = 2
-    }
-    this.bill = bill
-    this.transmod.Bill = this.bill
-    // console.log(this.transmod)
-    // this.Auth.saverepay(this.transmod).subscribe(data => {
-    //   this.savedata = data
-    //   console.log(this.savedata)
-    // })
-    console.log('vendid',this.vendorId)
-    this.test.payment = null
-    this.test.reference = null
-    this.venid.reset()
-    this.SuppliedById = null
-    this.test.paymenttypeid =null
-    this.isTable = !this.isTable 
-    // window.location.reload();
-
-  }else{
-    this.notification.error('Error', 'Check All Data')
-  }
     // this.getreCreditData()
+    // this.isTable = !this.isTable
+
   }
 
+  locback() {
+    // this.isShown = !this.isShown
+    this.isTable = !this.isTable
+    this.model = ''
+    this.model1 = ''
+    this.test = {
+      paymenttypeid: 0,
+      payment: '',
+      reference: '',
+    }
+  }
 
 }
 

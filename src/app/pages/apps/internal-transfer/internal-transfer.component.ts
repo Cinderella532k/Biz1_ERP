@@ -18,17 +18,18 @@ import {
 } from './internal-transfer.module'
 import { Location } from '@angular/common'
 import { StateObservable } from '@ngrx/store'
-import { log } from 'console'
 
 @Component({
   selector: 'app-internal-transfer',
   templateUrl: './internal-transfer.component.html',
   styleUrls: ['./internal-transfer.component.scss'],
 })
+
 export class InternalTransferComponent implements OnInit {
   @ViewChild('instance', { static: true }) instance: NgbTypeahead
   @ViewChild('quantityel', { static: false }) public quantityel: TemplateRef<any>
   @ViewChild('enterproduct', { static: false }) public enterproduct: TemplateRef<any>
+  // @ViewChild('enterprod', { static: false}) public enterprod: TemplateRef<any>
   //productinput
   @ViewChild('discper', { static: false }) public discperel: TemplateRef<any>
   @ViewChild('disc', { static: false }) public discel: TemplateRef<any>
@@ -37,6 +38,7 @@ export class InternalTransferComponent implements OnInit {
   @ViewChild('stock', { static: false }) public stockmodel: TemplateRef<any>;//productinput
 
   model: any = 'QWERTY'
+  model1: any = 'ggg'
   order: OrderModule
   RecData: DelModule
   inputValue: string = ''
@@ -198,7 +200,7 @@ export class InternalTransferComponent implements OnInit {
   isRxve = true
   isNRxve = false
   closeResult = ''
-  ordId = null
+  ordId = 0
   TotalProductSale = 0
   TotalPrdQty = 0
   streId = 0
@@ -209,6 +211,7 @@ export class InternalTransferComponent implements OnInit {
   numRecords = 50
   NewArr: any = []
   show = true
+
   tableData = [
     {
       key: '1',
@@ -274,7 +277,8 @@ export class InternalTransferComponent implements OnInit {
     this.storeid = user.name
     console.log(this.storeid);
 
-    this.order = new OrderModule(2)
+    this.order = new OrderModule(2, this.OrdId)
+
     this.products = []
     this.getBarcodeProduct()
     this.getStoreList()
@@ -302,14 +306,7 @@ export class InternalTransferComponent implements OnInit {
       this.ordNo = data['lastorderNo'] + 1
     })
   }
-  receiveStk(id) {
-    console.log(id)
-    this.Auth.editInternalord(id).subscribe(data => {
-      console.log(data)
-    })
-    // this.isRxve = ! this.isRxve; 
-    // this.isNRxve =!this.isNRxve;
-  }
+
   open(content) {
     this.modalService.open(content, { ariaLabelledBy: 'modal-basic-title' }).result.then(
       result => {
@@ -385,26 +382,31 @@ export class InternalTransferComponent implements OnInit {
     // this.order.OrderStatusDetails = new OrderstatusDetails()
     console.log('save', this.order)
     this.RecData = new DelModule(
-      this.CompanyId,
+      this.CompanyId, 
       this.order.Items,
       this.draft,
       this.order,
       this.order.OrderDetail,
     )
     console.log('finalarray', this.RecData)
-    // this.Auth.savestock(this.RecData).subscribe(data => {
-    //   console.log(data)
+    this.Auth.savestock(this.RecData).subscribe(data => {
+      console.log(data)
 
-    //   this.isShown = !this.isShown
-    //   this.isTable = !this.isTable
-    //   this.Getorderlist()
-    //   this.order = new OrderModule(2)
-    // })
+      this.isShown = !this.isShown
+      this.isTable = !this.isTable
+      this.Getorderlist()
+      this.order = new OrderModule(2, this.OrdId)
+    })
+
+
   }
   internal() {
     this.isShown = !this.isShown
     this.isTable = !this.isTable
   }
+
+
+
   goback() {
     this.router.navigateByUrl('internaltransfer')
   }
@@ -414,7 +416,7 @@ export class InternalTransferComponent implements OnInit {
     this.isShown = !this.isShown
     this.temporaryItem = { Quantity: '', price: '', tax1: '', tax2: '' }
     this.model = { model: '' }
-    this.order = new OrderModule(2)
+    this.order = new OrderModule(2, this.OrdId)
   }
 
   locback() {
@@ -433,10 +435,10 @@ export class InternalTransferComponent implements OnInit {
       searchId: this.ordId,
       numRecordsStr: this.numRecordsStr,
     })
-    // this.Auth.getorder(this.Ordprd).subscribe(data => {
-    //   this.OrdData = data
-    //   console.log('OrdData', this.OrdData)
-    // }) 
+    this.Auth.getorder(this.Ordprd).subscribe(data => {
+      this.OrdData = data
+      console.log('OrdData', this.OrdData)
+    })
   }
   setproductbybarcode(code) {
   }
@@ -503,16 +505,22 @@ export class InternalTransferComponent implements OnInit {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
+  ContainWgt: null
+  StockContainerId: null
   submitted: boolean = false
+  StkContainerName = ''
+
+
   addItem() {
-    console.log('temporaryItem', this.temporaryItem)
+    console.log('temporaryItem', this.temporaryItem, this.OrdId, this.storeId)
     this.submitted = true
     console.log(this.validation())
     if (this.validation()) {
-      this.order.addproduct(this.temporaryItem)
+      this.order.addproduct(this.temporaryItem, this.OrdId, this.storeId)
       this.temporaryItem = { DiscAmount: 0, Quantity: 0 }
       this.productinput['nativeElement'].focus()
       this.model = ''
+      this.model1 = ''
       this.filteredvalues = []
       this.submitted = false
       console.log('cvcv', this.order)
@@ -647,7 +655,7 @@ export class InternalTransferComponent implements OnInit {
     window.location.reload()
   }
 
-  OrdId: number = 0
+  OrdId: any
   OrderDetail: any = null
   ts: any
   getorderid(OrdId, modalRef) {
@@ -753,7 +761,7 @@ export class InternalTransferComponent implements OnInit {
     console.log(this.SuppliedById)
     this.getallprod()
   }
-
+ 
   selectproduct() {
     console.log('selected product', this.model)
   }
@@ -775,6 +783,7 @@ export class InternalTransferComponent implements OnInit {
     this.isDisabled = !this.isDisabled
     this.temporaryItem = { Quantity: '', price: '', tax1: '', tax2: '' }
     this.model = { model: '' }
+    this.model1 = { model1: '' }
   }
 
   batchprd: any = []
@@ -796,6 +805,7 @@ export class InternalTransferComponent implements OnInit {
         prod.OrderQuantity = null
       })
       this.enterproduct['nativeElement'].focus()
+      //this.enterprod['nativeElement'].focus()
       this.groupProducts()
     })
   }
@@ -853,15 +863,13 @@ export class InternalTransferComponent implements OnInit {
       return r
     }, [])
     this.groupedProducts = this.gprod.product.reduce((r, o) => {
-      //console.log('2', this.groupedProducts);
-      var key = o.barcodeId + '_'
+      var key = o.name + '_'
       if (!helper[key]) {
         helper[key] = Object.assign({}, o)
         r.push(helper[key])
       }
       return r
     }, [])
-    console.log('grouped', this.groupedProducts)
   }
 
   searchproduct = (text$: Observable<string>) =>
@@ -944,7 +952,7 @@ export class InternalTransferComponent implements OnInit {
     let orderedQty = 0
     if (this.order.Items.some(x => x.Productkey == prod_key)) {
       orderedQty = this.order.Items.filter(x => x.Productkey == prod_key)[0].OrderQuantity
-    }
+    } 
     console.log(this.gprod.batchprod)
     if (Items.OrderQuantity && Items.OrderQuantity <= prod.maxqty) {
       console.log('%c GOOD! ', 'color: #bada55')
@@ -966,10 +974,243 @@ export class InternalTransferComponent implements OnInit {
       Items.OrderQuantity = null
       this.gprod.batchprod.filter(x => x.batchId == Items.batchId)[0].quantity = prod.maxqty - 1
       this.order.setbillamount()
-    }
+    } 
     console.log(Items.OrderQuantity)
   }
 
+  // NEW Edit
+  shown = true
+  ordPrdDetails: any = []
+  SuppliedBy = ''
+  Idorder = 0
+  array: any = []
+  OrderedBy = ''
+
+  editback() {
+    this.shown = !this.shown
+  }
+
+  updataprod: any
+
+  prodts: any = {
+    name: '',
+    orderQuantity: '',
+    price: '',
+    tax1: '',
+    tax2: ''
+  }
+  orderStatus = 3
+  getorderPrd(OrdId) {
+    var array = [];
+    if (this.OrdId != '0') {
+      this.Auth.getorderPrd(this.CompanyId, OrdId).subscribe(data => {
+        this.ordPrdDetails = data
+        console.log(this.ordPrdDetails);
+        this.updataprod = this.ordPrdDetails['orderProd']
+        console.log(this.updataprod);
+
+        this.prodts.name = this.updataprod[0].name
+        console.log(this.prodts.name);
+
+        this.prodts.orderQuantity = this.updataprod[0].orderQuantity
+        console.log(this.prodts.orderQuantity);
+
+        this.prodts.price = this.updataprod[0].price
+        console.log(this.prodts.price); 
+
+        this.prodts.tax1 = this.updataprod[0].tax1
+        console.log(this.prodts.tax1);
+
+        this.prodts.tax2 = this.updataprod[0].tax2
+        console.log(this.prodts.tax2);
+
+        this.prodts.name = this.updataprod[0].name
+        console.log(this.prodts.name);
+        console.log('hhrtughggg', this.ordPrdDetails)
+        this.ordPrdDetails.orderItem.forEach(element => {
+          element.Action = 'Chk'
+          element['Price'] = element.price
+          this.array.push({
+            CompanyId: element['companyId'],
+            ContainerId: element['containerId'],
+            ContainerWeight: element['containerWeight'],
+            OpenQty: element['orderQuantity'],
+            GrossQty: element['orderQuantity'],
+            DispatchQty: element['orderQuantity'],
+            OrderQuantity: element['orderQuantity'],
+            DispatchProductId: element['productId'],
+            ProductId: element['productId'],
+            Dispatchprd: element['name'],
+            ProductName: element['name'],
+            Price: element['Price'],
+            Tax1: element['tax1'],
+            Tax2: element['tax2'],
+            Tax3: element['tax2'],
+            Tax4: element['tax2'],
+            Action: element['Action'],
+            OrderItemId: element['orderItemId'],
+            OrderId: element['orderId'],
+            Updated: element['updated'],
+            OrdItemDetailId: element['id'],
+            barcodeId: element['barcodeId'],
+            OrderItemType: element['orderItemType'],
+            OrderItemRefId: element['orderItemRefId'],
+            RefId: element['refId'],
+          })
+        })
+        this.SuppliedById = this.ordPrdDetails.order[0].suppliedById
+        this.OrderedById = this.ordPrdDetails.order[0].orderedById
+        this.SuppliedBy = this.ordPrdDetails.order[0].supplier
+        this.OrderedBy = this.ordPrdDetails.order[0].receiver
+        this.Idorder = this.ordPrdDetails.order[0].id
+        console.log('array2', this.array)
+      })
+    }
+  }
+
+  deletenew(index) {
+    this.order.Items.splice(index, 1)
+    this.order.setbillamount()
+  }
+
+  Update() {
+    console.log(this.order);
+    this.order.Id = this.prodts.OrdId
+    this.order.OrderNo = this.prodts.ordNo
+    this.order.StoreId = this.prodts.StoreId
+    this.order.BillDate = moment().format('YYYY-MM-DD HH:MM A')
+    this.order.CreatedDate = moment().format('YYYY-MM-DD HH:MM A')
+    this.order.BillDateTime = moment().format('YYYY-MM-DD HH:MM A')
+    this.order.OrderedDate = moment().format('YYYY-MM-DD HH:MM A')
+    this.order.OrderedDateTime = moment().format('YYYY-MM-DD HH:MM A')
+    this.order.DeliveryDateTime = moment().format('YYYY-MM-DD HH:MM A')
+    this.order.ModifiedDate = moment().format('YYYY-MM-DD HH:MM A')
+    this.order.CompanyId = this.prodts.CompanyId
+    // this.order.Description = this.prodts.name
+
+    this.order.Items.forEach(item => {
+      item.CompanyId = this.CompanyId
+      console.log(item);
+    })
+
+    this.array.push({
+      companyId:this.CompanyId,
+      id:this.OrdId
+    })
+    console.log(this.array);
+    
+
+    // this.order.OrderStatusDetails = n
+
+    // this.order.Items = this.array
+    // console.log(this.order.Items);
+
+    this.Auth.Update(this.order).subscribe(data => {
+      console.log('up', data);
+      this.addItem()
+      // this.getorderPrd()
+    })
+  }
+
+
+ 
+  save(){
+    console.log(this.OrdId.id);
+    if(this.OrdId.id > 0) this.edit()
+    else this.edit()
+
+  }
+
+
+edit(){
+  if(this.OrdId.id == 0){
+    this.Auth.savestock(this.RecData).subscribe(data =>{
+      console.log(data);
+      
+    })
+  }
+  else if (this.OrdId.id > 0){
+    this.Auth.Update(this.order).subscribe(data => {
+      console.log(data);
+      
+    })
+  }
 }
 
+  prod: any = {
+    name: ''
+  }
+  selectproducts() {
+    console.log('tedstr', this.prod.name);
+    console.log('product retype', this.products.name)
+  }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}

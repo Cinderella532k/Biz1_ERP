@@ -50,8 +50,9 @@ export class OrderModule {
   OrderStatus: number
   // Quantity: number
   ProductKey: string
-  constructor(ordertype) {
+  constructor(ordertype, Id) {
     this.Items = []
+    this.Id = Id
     this.OrderDetail = []
     this.Updated = false
     this.OrderNo = 0
@@ -105,7 +106,7 @@ export class OrderModule {
   //   this.setbillamount() 
   // }
 
-  addproduct(product) {
+  addproduct(product, OrdId, storeId) {
     var productkey = this.productkeygenerator(product)
     var showname = this.getshowname(product)
     console.log(this.Items)
@@ -114,13 +115,14 @@ export class OrderModule {
     }
     else {
       product.key = productkey
-      this.Items.push(new OrderItemModule(product))
+      this.Items.push(new OrderItemModule(product, OrdId, storeId))
       this.OrderDetail.push(new OrderItemDetailModule(product))
       console.log(this.Items)
     }
     this.setbillamount()
     console.log(productkey)
   }
+
 
   productkeygenerator(product) {
     console.log(product)
@@ -183,6 +185,7 @@ export class OrderModule {
 
 export class OrderItemModule {
   Id: number
+  Action: string
   ProductName: string
   Updated: boolean = false
   DiscPercent: number
@@ -212,7 +215,7 @@ export class OrderItemModule {
   Amount: number
   CreatedDate: string
   batchId: number
-  batchNo: number
+  batchNo: number 
   // CreatedBy: number;
   BillId: number
   // PendingQty: number;
@@ -222,7 +225,7 @@ export class OrderItemModule {
   // StockUpdateId: number;
   OldStock: number
   CompanyId: number
-  VarianceReasonStr: string
+  VarianceReasonStr: string 
   VarianceReasonDesc: string
   BarcodeId: number
   TaxAmount1: number
@@ -232,10 +235,14 @@ export class OrderItemModule {
   RefId: string
   ExpirayDate: string
   Productkey: string
-  Quantity: number
-  constructor(product) {
-    console.log(product)
+  // Quantity: number
+  DispatchQty: number
+  productId: number
+
+  constructor(product, OrdId, storeId) {
+    console.log(product, OrdId, storeId)
     this.Id = 0
+    this.Action = 'Add'
     this.Updated = false
     this.DiscPercent = 0
     this.Status = 0
@@ -245,9 +252,9 @@ export class OrderItemModule {
     this.TotalAmount = 0
     this.OptionJson = ''
     this.OrderItemId = 0
-    this.OrderId = 0
+    this.OrderId = OrdId || 0 
    // this.DispatchedQuantity = product.quantity || 0
-    //this.ReceivedQuantity = 0
+    this.ReceivedQuantity = 0
     // this.ReturnedQuantity = 0;
     // this.CancelledQuantity = 0;
     // this.ReceiveLaterQuantity = 0;
@@ -257,7 +264,7 @@ export class OrderItemModule {
     // this.CreatedDate = '';
     // this.CreatedBy = 0;
     this.BillId = 0
-    this.Quantity = 0
+    // this.Quantity = 0
     this.ExpirayDate = product.expiaryDate
     // this.PendingQty = 0;
     // this.CurrentStock = 0;
@@ -275,7 +282,8 @@ export class OrderItemModule {
     this.ProductName = product.name
     this.Productkey = product.key
     this.ProductId = product.productId || product.id
-    this.OrderQuantity = product.OrderQuantity
+    this.OrderQuantity = product.OrderQuantity || product.DispatchQty
+   // this.DispatchQty = product.DispatchQty
     this.DispatchedQuantity = product.Quantity || 0
     this.ReceivedQuantity = product.Quantity || 0
     this.Price = product.price
@@ -338,7 +346,7 @@ export class OrderItemDetailModule {
     this.DateTime = ''
     this.RelatedOrderId = ''
     this.CreatedDate = ''
-    this.BatchId = product.batchId
+    // this.BatchId = product.batchId
     this.DiscAmount = 0
     this.DiscPercent = 0
     this.DiscPerQty = 0

@@ -6,6 +6,9 @@ import { NzNotificationService } from 'ng-zorro-antd'
 import { NgbModal, ModalDismissReasons, NgbModalConfig } from '@ng-bootstrap/ng-bootstrap'
 import { Location } from '@angular/common';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown'
+import { merge, Observable, Subject } from 'rxjs'
+import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators'
+
 
 @Component({
   selector: 'app-batch-entry',
@@ -69,6 +72,7 @@ export class BatchEntryComponent implements OnInit {
   size = 'default'
   checked = true;
   yesterday = new Date()
+
   public disabledDate = (current: Date): boolean => current < this.yesterday;
   showInactive: Boolean = false
 
@@ -127,12 +131,6 @@ export class BatchEntryComponent implements OnInit {
     })
   }
 
-  onInputAutocomplete() {
-    console.log(this.products)
-    this.filterproduct = this.products.filter(x => x.product.toLowerCase().includes(this.inputValue), 
-    // && !x.ishidden && !this.batches.some(oi => oi.productId == x.productId)
-    ).slice(0,5)
-  }
 
   now() {
     this.batchdate = new Date()
@@ -143,6 +141,14 @@ export class BatchEntryComponent implements OnInit {
   //   this.filterproduct = this.products.filter(x =>
   //     x.product.toLowerCase().includes(this.inputValue).slice(0, 5)
   // }
+
+  onInputAutocomplete() {
+    console.log(this.products)
+    this.filterproduct = this.products.filter(x => x.product.toLowerCase().includes(this.inputValue),
+      // && !x.ishidden && !this.batches.some(oi => oi.productId == x.productId)
+    ).slice(0, 5)
+  }
+
 
   onChange(e) {
     console.log(e, moment(e), this.date)
@@ -188,15 +194,19 @@ export class BatchEntryComponent implements OnInit {
       this.submitted = false
       //console.log(this.barcodeel)
       this.batches.batchno = null;
-      this.barcodeel['nativeElement'].focus()
+    //  this.barcodeel['nativeElement'].focus()
       console.log(this.batches)
     }
-  }
-
+    if (!this.inputValue) {
+      this.filterproduct = []
+       return
+    }
+  } 
+ 
   delete(index) {
     this.batches.splice(index, 1)
   }
-
+ 
   searchbyproduct(event) {
     console.log(event.element.nativeElement.id)
     var product = this.products.filter(x => x.barcodeId == +event.element.nativeElement.id)[0]

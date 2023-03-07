@@ -19,7 +19,7 @@ import { OrderItemModule, OrderModule, AdditionalCharge, Transaction } from './s
 import { SyncService } from 'src/app/services/sync/sync.service'
 import { PrintService } from 'src/app/services/print/print.service'
 
-@Component({
+@Component({ 
   selector: 'app-sale',
   templateUrl: './sale.component.html',
   styleUrls: ['./sale.component.scss'],
@@ -510,7 +510,7 @@ export class SaleComponent implements OnInit {
       this.selectedproduct(this.batchproduct[0])
     }
     this.quantityel['nativeElement'].focus()
-  }
+  } 
   selectedproduct(product) {
     console.log(product)
     Object.keys(product).forEach(key => {
@@ -854,4 +854,84 @@ export class SaleComponent implements OnInit {
       this.printservice.print(printtemplate, [this.printersettings.receiptprinter])
     }
   }
+
+
+
+    // keyEvent(event: KeyboardEvent) {
+  //   let spl_keys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F9', 'F111', 'Escape', 'F2', 'ArrowDown', 'ArrowUp', 'Enter', 'F10']
+  //   if (spl_keys.includes(event.key))
+  //     event.preventDefault()
+  //   console.log(event.key)
+  //   if (event.key == 'F1') {
+  //     this.createorder(5)
+  //   } else if (event.key == 'F2') {
+  //     this.createorder(1)
+  //   } else if (event.key == 'F3') {
+  //     this.createorder(2)
+  //   } else if (event.key == 'F4') {
+  //     this.createorder(3)
+  //   } else if (event.key == 'F5') {
+  //     this.createorder(4)
+  //   } else if (event.key == 'F9') {
+  //     var order = JSON.parse(localStorage.getItem('lastorder'))
+  //     if (order && order.InvoiceNo) this.printreceiptbyorder(order)
+  //   } else if (
+  //     this.order &&
+  //     this.order.OrderTypeId == 5 &&
+  //     this.order.BillAmount > 0
+  //     // event.key == 'F111'
+  //   ) {
+  //     let last_ind = this.storePaymentTypes.length - 1
+  //     let current_ind = this.storePaymentTypes.findIndex(x => x.Id == this.order.StorePaymentTypeId)
+  //     let new_ind = current_ind == last_ind ? (current_ind = 0) : current_ind + 1
+  //     this.order.StorePaymentTypeId = this.storePaymentTypes[new_ind].Id
+  //     this.order.machine_id = this.storePaymentTypes[new_ind].MachineId
+  //   } else if (
+  //     this.order &&
+  //     this.order.OrderTypeId == 5 &&
+  //     this.order.StorePaymentTypeId != 0 &&
+  //     event.key == 'Escape'
+  //   ) {
+  //     console.log('save counter order')
+  //     // this.saveorder()
+  //     this.draftorderdrawer
+
+  //   } else if (
+  //     this.order &&
+  //     this.order.OrderTypeId == 5 &&
+  //     this.order.Items.length > 0 &&
+  //     event.key == 'F2'
+  //   ) {
+  //     this.draftOrder()
+  //   } else if (event.key == "ArrowDown") {
+  //     let bp_modal = document.getElementById("batchProduct")
+  //     if (bp_modal) {
+  //       let index = this.batchproduct.findIndex(x => x.focus == true)
+  //       if (index < (this.batchproduct.length - 1)) {
+  //         this.batchproduct[index].focus = false
+  //         this.batchproduct[index + 1].focus = true
+  //       }
+  //     }
+  //   } else if (event.key == "ArrowUp") {
+  //     let bp_modal = document.getElementById("batchProduct")
+  //     if (bp_modal) {
+  //       let index = this.batchproduct.findIndex(x => x.focus == true)
+  //       if (index > 0) {           
+  //         this.batchproduct[index].focus = false
+  //         this.batchproduct[index - 1].focus = true
+  //       }
+  //     }
+  //   } else if (event.key == "Enter") {
+  //     let bp_modal = document.getElementById("batchProduct")
+  //     if (bp_modal) {
+  //       let product = this.batchproduct.filter(x => x.focus == true)[0]
+  //       this.selectedproduct(product)
+  //       this.batchproduct
+  //     }
+    
+  //   }
+
+  //   console.log(this.batchproduct.length, "focus index: " + this.batchproduct.findIndex(x => x.focus == true) )
+  //   // console.log(this.order.OrderTypeId, this.order.StorePaymentTypeId, this.order && this.order.OrderTypeId == 5 && this.order.StorePaymentTypeId != 0 && event.key == 'F10', event)
+  // }
 }

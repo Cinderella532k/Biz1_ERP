@@ -47,17 +47,17 @@
                         <input class="form-control" placeholder="Select" [(ngModel)]="inputValue"
                             (input)="onInputAutocomplete()" [nzAutocomplete]="auto"
                             (keyup.enter)="quantityel.focus();" />
-                        <nz-autocomplete nzBackfill #auto (selectionChange)="searchbyproduct($event);">
+                        <nz-autocomplete #auto (selectionChange)="searchbyproduct($event);">
                             <nz-auto-option id="{{product.barcodeId}}" *ngFor="let product of filterproduct"
                                 [nzValue]="product.product">
                                 {{ product.product }}
                             </nz-auto-option>
-                            <!-- <a class="btn btn-sm btn-primary" [routerLink]="['/apps/products']">
+                             <!-- <a class="btn btn-sm btn-primary" [routerLink]="['/apps/products']">
                                 <i class="fe fe-plus fa-lg" style="font-size:15px ;">Add Product </i>
                             </a> -->
-                        </nz-autocomplete>
+                         </nz-autocomplete>
                     </td> 
-                    <td>
+                    <td> 
                         <input class="form-control" #quantityel (keyup.enter)="priceel.focus();"
                             [(ngModel)]="batchentry.quantity " type="text" placeholder="Qty" min="1"
                             [ngClass]="{'is-invalid': submitted && batchentry.quantity <= 0}" />
